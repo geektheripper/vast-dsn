@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/geektheripper/vast-dsn/dsn/s3_dsn"
+	"github.com/geektheripper/vast-dsn/s3_dsn"
 )
 
 func TestS3DSNParser(t *testing.T) {
