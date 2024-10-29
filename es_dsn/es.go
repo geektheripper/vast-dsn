@@ -13,23 +13,25 @@ type EsDSN struct {
 	IndexPrefix string
 }
 
-func Parse(dsn string) (*EsDSN, error) {
-	url, err := url.Parse(dsn)
+func Parse(dsnStr string) (*EsDSN, error) {
+	dsnUrl, err := url.Parse(dsnStr)
 	if err != nil {
 		return nil, err
 	}
 
-	if url.Scheme != "http" && url.Scheme != "https" {
+	if dsnUrl.Scheme != "http" && dsnUrl.Scheme != "https" {
 		return nil, errors.New("invalid scheme, should be http or https")
 	}
 
 	esdsn := &EsDSN{Config: &elasticsearch.Config{}}
 
-	esdsn.Config.Username = url.User.Username()
-	esdsn.Config.Password, _ = url.User.Password()
+	esAddr := url.URL{Scheme: dsnUrl.Scheme, Host: dsnUrl.Host}
+	esdsn.Config.Addresses = []string{esAddr.String()}
+	esdsn.Config.Username = dsnUrl.User.Username()
+	esdsn.Config.Password, _ = dsnUrl.User.Password()
 
-	esdsn.Index = url.Query().Get("index")
-	esdsn.IndexPrefix = url.Query().Get("index_prefix")
+	esdsn.Index = dsnUrl.Query().Get("index")
+	esdsn.IndexPrefix = dsnUrl.Query().Get("index_prefix")
 
 	if esdsn.Index != "" && esdsn.IndexPrefix != "" {
 		return nil, errors.New("index and index_prefix cannot be used together")
