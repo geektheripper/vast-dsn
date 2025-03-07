@@ -1,3 +1,6 @@
-go 1.20
+go 1.21.8
 
-use ./s3_dsn
+use (
+	./es_dsn
+	./s3_dsn
+)

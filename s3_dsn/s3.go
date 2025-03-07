@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 )
 
-func ParseDSN(dsn string) (config *aws.Config, bucket string, key string, err error) {
+func Parse(dsn string) (config *aws.Config, bucket string, key string, err error) {
 	config = &aws.Config{}
 
 	url, err := url.Parse(dsn)
@@ -66,16 +66,16 @@ func ParseDSN(dsn string) (config *aws.Config, bucket string, key string, err er
 	return
 }
 
-func MustParseDSN(dsn string) (config *aws.Config, bucket string, key string, err error) {
-	config, bucket, key, err = ParseDSN(dsn)
+func MustParse(dsn string) (config *aws.Config, bucket string, key string) {
+	config, bucket, key, err := Parse(dsn)
 	if err != nil {
 		panic(err)
 	}
-	return
+	return config, bucket, key
 }
 
-func ParseS3DSN(dsn string) (config *aws.Config, err error) {
-	config, bucket, _, err := ParseDSN(dsn)
+func ParseS3(dsn string) (config *aws.Config, err error) {
+	config, bucket, _, err := Parse(dsn)
 	if bucket != "" {
 		return nil, fmt.Errorf("invalid s3 dsn: unexpected bucket: %s", bucket)
 	}
@@ -83,16 +83,16 @@ func ParseS3DSN(dsn string) (config *aws.Config, err error) {
 	return
 }
 
-func MustParseS3DSN(dsn string) (config *aws.Config, err error) {
-	config, err = ParseS3DSN(dsn)
+func MustParseS3(dsn string) *aws.Config {
+	config, err := ParseS3(dsn)
 	if err != nil {
 		panic(err)
 	}
-	return
+	return config
 }
 
-func ParseS3BucketDSN(dsn string) (config *aws.Config, bucket string, err error) {
-	config, bucket, key, err := ParseDSN(dsn)
+func ParseS3Bucket(dsn string) (config *aws.Config, bucket string, err error) {
+	config, bucket, key, err := Parse(dsn)
 
 	if bucket == "" {
 		return nil, "", fmt.Errorf("invalid s3 bucket dsn: missing bucket")
@@ -105,16 +105,16 @@ func ParseS3BucketDSN(dsn string) (config *aws.Config, bucket string, err error)
 	return
 }
 
-func MustParseS3BucketDSN(dsn string) (config *aws.Config, bucket string, err error) {
-	config, bucket, err = ParseS3BucketDSN(dsn)
+func MustParseS3Bucket(dsn string) (*aws.Config, string) {
+	config, bucket, err := ParseS3Bucket(dsn)
 	if err != nil {
 		panic(err)
 	}
-	return
+	return config, bucket
 }
 
-func ParseS3ObjectDSN(dsn string) (config *aws.Config, bucket string, key string, err error) {
-	config, bucket, key, err = ParseDSN(dsn)
+func ParseS3Object(dsn string) (config *aws.Config, bucket string, key string, err error) {
+	config, bucket, key, err = Parse(dsn)
 	if bucket == "" {
 		return nil, "", "", fmt.Errorf("invalid s3 object dsn: missing bucket")
 	}
@@ -124,10 +124,10 @@ func ParseS3ObjectDSN(dsn string) (config *aws.Config, bucket string, key string
 	return
 }
 
-func MustParseS3ObjectDSN(dsn string) (config *aws.Config, bucket string, key string, err error) {
-	config, bucket, key, err = ParseS3ObjectDSN(dsn)
+func MustParseS3Object(dsn string) (config *aws.Config, bucket string, key string) {
+	config, bucket, key, err := ParseS3Object(dsn)
 	if err != nil {
 		panic(err)
 	}
-	return
+	return config, bucket, key
 }
