@@ -2,7 +2,10 @@ module github.com/geektheripper/vast-dsn/es_dsn
 
 go 1.21.8
 
-require github.com/elastic/go-elasticsearch/v8 v8.15.0
+require (
+	github.com/elastic/go-elasticsearch/v8 v8.15.0
+	github.com/geektheripper/vast-dsn/utils v0.0.2
+)
 
 require (
 	github.com/elastic/elastic-transport-go/v8 v8.6.0 // indirect

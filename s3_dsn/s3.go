@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/geektheripper/vast-dsn/utils"
 )
 
 func Parse(dsn string) (config *aws.Config, bucket string, key string, err error) {
@@ -66,10 +67,12 @@ func Parse(dsn string) (config *aws.Config, bucket string, key string, err error
 	return
 }
 
-func MustParse(dsn string) (config *aws.Config, bucket string, key string) {
+func MustParse(dsn string, logger ...utils.Logger) (config *aws.Config, bucket string, key string) {
+	log := utils.EnsureLogger(logger...)
+
 	config, bucket, key, err := Parse(dsn)
 	if err != nil {
-		panic(err)
+		log.Fatalf("failed to parse s3 dsn: %v", err)
 	}
 	return config, bucket, key
 }
@@ -83,10 +86,12 @@ func ParseS3(dsn string) (config *aws.Config, err error) {
 	return
 }
 
-func MustParseS3(dsn string) *aws.Config {
+func MustParseS3(dsn string, logger ...utils.Logger) *aws.Config {
+	log := utils.EnsureLogger(logger...)
+
 	config, err := ParseS3(dsn)
 	if err != nil {
-		panic(err)
+		log.Fatalf("failed to parse s3 dsn: %v", err)
 	}
 	return config
 }
@@ -105,10 +110,12 @@ func ParseS3Bucket(dsn string) (config *aws.Config, bucket string, err error) {
 	return
 }
 
-func MustParseS3Bucket(dsn string) (*aws.Config, string) {
+func MustParseS3Bucket(dsn string, logger ...utils.Logger) (*aws.Config, string) {
+	log := utils.EnsureLogger(logger...)
+
 	config, bucket, err := ParseS3Bucket(dsn)
 	if err != nil {
-		panic(err)
+		log.Fatalf("failed to parse s3 bucket dsn: %v", err)
 	}
 	return config, bucket
 }
@@ -124,10 +131,12 @@ func ParseS3Object(dsn string) (config *aws.Config, bucket string, key string, e
 	return
 }
 
-func MustParseS3Object(dsn string) (config *aws.Config, bucket string, key string) {
+func MustParseS3Object(dsn string, logger ...utils.Logger) (config *aws.Config, bucket string, key string) {
+	log := utils.EnsureLogger(logger...)
+
 	config, bucket, key, err := ParseS3Object(dsn)
 	if err != nil {
-		panic(err)
+		log.Fatalf("failed to parse s3 object dsn: %v", err)
 	}
 	return config, bucket, key
 }

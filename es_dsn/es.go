@@ -3,8 +3,10 @@ package es_dsn
 import (
 	"errors"
 	"net/url"
+	"os"
 
 	"github.com/elastic/go-elasticsearch/v8"
+	"github.com/geektheripper/vast-dsn/utils"
 )
 
 type EsDSN struct {
@@ -40,10 +42,13 @@ func Parse(dsnStr string) (*EsDSN, error) {
 	return esdsn, nil
 }
 
-func MustParse(dsn string) *EsDSN {
+func MustParse(dsn string, logger ...utils.Logger) *EsDSN {
+	log := utils.EnsureLogger(logger...)
+
 	esdsn, err := Parse(dsn)
 	if err != nil {
-		panic(err)
+		log.Fatalf("failed to parse elasticsearch dsn: %v", err)
+		os.Exit(1)
 	}
 	return esdsn
 }
