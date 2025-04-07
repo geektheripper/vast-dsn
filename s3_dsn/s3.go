@@ -1,19 +1,50 @@
 package s3_dsn
 
 import (
+	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	smithyendpoints "github.com/aws/smithy-go/endpoints"
 	"github.com/geektheripper/vast-dsn/utils"
 )
 
-func Parse(dsn string) (config *aws.Config, bucket string, key string, err error) {
-	config = &aws.Config{}
+type Resolver struct {
+	Protocol string
+}
 
+func (r *Resolver) ResolveEndpoint(ctx context.Context, params s3.EndpointParameters) (smithyendpoints.Endpoint, error) {
+	if *(params.Endpoint) == "-" {
+		return s3.NewDefaultEndpointResolverV2().ResolveEndpoint(ctx, params)
+	}
+
+	subdomain := *params.Endpoint
+	if params.Bucket != nil {
+		subdomain = fmt.Sprintf("%s.%s", *params.Bucket, *params.Endpoint)
+	}
+
+	u := url.URL{
+		Scheme: r.Protocol,
+		Host:   subdomain,
+		Path:   "",
+	}
+
+	if *params.ForcePathStyle && params.Bucket != nil {
+		u.Host = *params.Endpoint
+		u.Path += "/" + *params.Bucket
+	}
+
+	return smithyendpoints.Endpoint{URI: u}, nil
+}
+
+func Load(dsn string) (client *s3.Client, bucket string, key string, err error) {
 	url, err := url.Parse(dsn)
 	if err != nil {
 		return
@@ -24,8 +55,12 @@ func Parse(dsn string) (config *aws.Config, bucket string, key string, err error
 		return
 	}
 
-	user := url.User.Username()
-	pass, passOk := url.User.Password()
+	access_key_id := url.User.Username()
+	secret_access_key, _ := url.User.Password()
+	if (access_key_id != "") != (secret_access_key != "") {
+		err = errors.New("invalid credentials: access_key_id and secret_access_key must be provided together")
+		return
+	}
 
 	protocol := "https"
 	if url.Query().Has("protocol") {
@@ -41,21 +76,15 @@ func Parse(dsn string) (config *aws.Config, bucket string, key string, err error
 		region = url.Query().Get("region")
 	}
 
-	disableSsl := url.Query().Get("disable-ssl") == "true"
-	s3ForcePathStyle := url.Query().Get("s3-force-path-style") == "true"
-
-	if user != "" && passOk {
-		config.Credentials = credentials.NewStaticCredentials(user, pass, "")
+	no_verify_ssl := url.Query().Get("no-verify-ssl") == "true"
+	use_path_style := false
+	_force_path_style := url.Query().Get("force-path-style")
+	_use_path_style := url.Query().Get("use-path-style")
+	if _use_path_style != "" {
+		use_path_style = _use_path_style == "true"
+	} else {
+		use_path_style = _force_path_style == "true"
 	}
-
-	endpoint := url.Host
-	if endpoint != "-" {
-		config.Endpoint = aws.String(protocol + "://" + endpoint)
-	}
-
-	config.Region = aws.String(region)
-	config.DisableSSL = aws.Bool(disableSsl)
-	config.S3ForcePathStyle = aws.Bool(s3ForcePathStyle)
 
 	path := url.Path
 	if path != "" {
@@ -64,21 +93,52 @@ func Parse(dsn string) (config *aws.Config, bucket string, key string, err error
 		key = strings.Join(parts[1:], "/")
 	}
 
+	config := aws.Config{BaseEndpoint: aws.String(url.Host)}
+
+	if region != "" {
+		config.Region = region
+	}
+
+	if no_verify_ssl {
+		httpclient := awshttp.NewBuildableClient()
+		httpclient.WithTransportOptions(func(transport *http.Transport) {
+			if transport.TLSClientConfig == nil {
+				transport.TLSClientConfig = &tls.Config{}
+			}
+			transport.TLSClientConfig.InsecureSkipVerify = true
+		})
+		config.HTTPClient = httpclient
+	}
+
+	if access_key_id != "" {
+		config.Credentials = aws.CredentialsProviderFunc(func(ctx context.Context) (aws.Credentials, error) {
+			return aws.Credentials{
+				AccessKeyID:     access_key_id,
+				SecretAccessKey: secret_access_key,
+			}, nil
+		})
+	}
+
+	client = s3.NewFromConfig(config, func(options *s3.Options) {
+		options.EndpointResolverV2 = &Resolver{Protocol: protocol}
+		options.UsePathStyle = use_path_style
+	})
+
 	return
 }
 
-func MustParse(dsn string, logger ...utils.Logger) (config *aws.Config, bucket string, key string) {
+func MustLoad(dsn string, logger ...utils.Logger) (client *s3.Client, bucket string, key string) {
 	log := utils.EnsureLogger(logger...)
 
-	config, bucket, key, err := Parse(dsn)
+	client, bucket, key, err := Load(dsn)
 	if err != nil {
 		log.Fatalf("failed to parse s3 dsn: %v", err)
 	}
-	return config, bucket, key
+	return client, bucket, key
 }
 
-func ParseS3(dsn string) (config *aws.Config, err error) {
-	config, bucket, _, err := Parse(dsn)
+func NewS3(dsn string) (client *s3.Client, err error) {
+	client, bucket, _, err := Load(dsn)
 	if bucket != "" {
 		return nil, fmt.Errorf("invalid s3 dsn: unexpected bucket: %s", bucket)
 	}
@@ -86,18 +146,18 @@ func ParseS3(dsn string) (config *aws.Config, err error) {
 	return
 }
 
-func MustParseS3(dsn string, logger ...utils.Logger) *aws.Config {
+func MustNewS3(dsn string, logger ...utils.Logger) *s3.Client {
 	log := utils.EnsureLogger(logger...)
 
-	config, err := ParseS3(dsn)
+	client, err := NewS3(dsn)
 	if err != nil {
 		log.Fatalf("failed to parse s3 dsn: %v", err)
 	}
-	return config
+	return client
 }
 
-func ParseS3Bucket(dsn string) (config *aws.Config, bucket string, err error) {
-	config, bucket, key, err := Parse(dsn)
+func NewS3Bucket(dsn string) (client *s3.Client, bucket string, err error) {
+	client, bucket, key, err := Load(dsn)
 
 	if bucket == "" {
 		return nil, "", fmt.Errorf("invalid s3 bucket dsn: missing bucket")
@@ -110,18 +170,18 @@ func ParseS3Bucket(dsn string) (config *aws.Config, bucket string, err error) {
 	return
 }
 
-func MustParseS3Bucket(dsn string, logger ...utils.Logger) (*aws.Config, string) {
+func MustNewS3Bucket(dsn string, logger ...utils.Logger) (*s3.Client, string) {
 	log := utils.EnsureLogger(logger...)
 
-	config, bucket, err := ParseS3Bucket(dsn)
+	client, bucket, err := NewS3Bucket(dsn)
 	if err != nil {
 		log.Fatalf("failed to parse s3 bucket dsn: %v", err)
 	}
-	return config, bucket
+	return client, bucket
 }
 
-func ParseS3Object(dsn string) (config *aws.Config, bucket string, key string, err error) {
-	config, bucket, key, err = Parse(dsn)
+func NewS3Object(dsn string) (client *s3.Client, bucket string, key string, err error) {
+	client, bucket, key, err = Load(dsn)
 	if bucket == "" {
 		return nil, "", "", fmt.Errorf("invalid s3 object dsn: missing bucket")
 	}
@@ -131,12 +191,12 @@ func ParseS3Object(dsn string) (config *aws.Config, bucket string, key string, e
 	return
 }
 
-func MustParseS3Object(dsn string, logger ...utils.Logger) (config *aws.Config, bucket string, key string) {
+func MustNewS3Object(dsn string, logger ...utils.Logger) (client *s3.Client, bucket string, key string) {
 	log := utils.EnsureLogger(logger...)
 
-	config, bucket, key, err := ParseS3Object(dsn)
+	client, bucket, key, err := NewS3Object(dsn)
 	if err != nil {
 		log.Fatalf("failed to parse s3 object dsn: %v", err)
 	}
-	return config, bucket, key
+	return client, bucket, key
 }
