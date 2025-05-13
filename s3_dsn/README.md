@@ -41,10 +41,14 @@ client, err := s3_dsn.NewS3("s3://access_key:secret_key@-?region=us-east-2")
 // error when got unexpected key
 client, bucket, err := s3_dsn.NewS3Bucket("s3://access_key:secret_key@minio.vastdns.example.com:9003/foobar?region=")
 
+// error when ends with non slash character
+client, bucket, key, err = s3_dsn.NewS3Object("s3://minio.vastdns.example.com:9003/foobar/path/to/dir/?region=")
+
 client, bucket, key, err = s3_dsn.NewS3Object("s3://minio.vastdns.example.com:9003/foobar/path/to/key?region=")
 
 // panic when got error
 client := s3_dsn.MustNewS3("...")
 client, bucket := s3_dsn.MustNewS3Bucket("...")
+client, bucket, path := s3_dsn.MustNewS3Path("...")
 client, bucket, key := s3_dsn.MustNewS3Object("...")
 ```
