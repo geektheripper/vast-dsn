@@ -33,22 +33,22 @@ S3 Object:
 ```go
 import "github.com/geektheripper/vast-dsn/dsn/s3_dsn"
 
-opts, bucket, key, err = s3_dsn.Load("s3://minio.vastdns.example.com:9003/foobar/path/to/key?region=")
+opts, bucket, key, err = s3_dsn.Parse("s3://minio.vastdns.example.com:9003/foobar/path/to/key?region=")
 
 // error when got unexpected bucket
-opts, err := s3_dsn.NewS3("s3://access_key:secret_key@-?region=us-east-2")
+opts, err := s3_dsn.ParseS3("s3://access_key:secret_key@-?region=us-east-2")
 
 // error when got unexpected key
-opts, bucket, err := s3_dsn.NewS3Bucket("s3://access_key:secret_key@minio.vastdns.example.com:9003/foobar?region=")
+opts, bucket, err := s3_dsn.ParseS3Bucket("s3://access_key:secret_key@minio.vastdns.example.com:9003/foobar?region=")
 
 // error when ends with non slash character
-opts, bucket, key, err = s3_dsn.NewS3Object("s3://minio.vastdns.example.com:9003/foobar/path/to/dir/?region=")
+opts, bucket, key, err = s3_dsn.ParseS3Object("s3://minio.vastdns.example.com:9003/foobar/path/to/dir/?region=")
 
-opts, bucket, key, err = s3_dsn.NewS3Object("s3://minio.vastdns.example.com:9003/foobar/path/to/key?region=")
+opts, bucket, key, err = s3_dsn.ParseS3Object("s3://minio.vastdns.example.com:9003/foobar/path/to/key?region=")
 
 // panic when got error
-opts := s3_dsn.MustNewS3("...")
-opts, bucket := s3_dsn.MustNewS3Bucket("...")
-opts, bucket, path := s3_dsn.MustNewS3Path("...")
-opts, bucket, key := s3_dsn.MustNewS3Object("...")
+opts := s3_dsn.MustParseS3("...")
+opts, bucket := s3_dsn.MustParseS3Bucket("...")
+opts, bucket, path := s3_dsn.MustParseS3Path("...")
+opts, bucket, key := s3_dsn.MustParseS3Object("...")
 ```

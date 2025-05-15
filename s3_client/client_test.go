@@ -49,7 +49,7 @@ func TestMinioCompatibility(t *testing.T) {
 	}
 
 	t.Run("minio compatibility", func(t *testing.T) {
-		s3_opts := s3_dsn.MustNewS3("s3://minioadmin:minioadmin@localhost:9000?force-path-style=true&protocol=http")
+		s3_opts := s3_dsn.MustParseS3("s3://minioadmin:minioadmin@localhost:9000?force-path-style=true&protocol=http")
 		client, err := s3_client.NewS3Client(s3_opts)
 		if err != nil {
 			t.Error(err)
@@ -64,7 +64,7 @@ func TestMinioCompatibility(t *testing.T) {
 			return
 		}
 
-		bs3_opts, bucket := s3_dsn.MustNewS3Bucket("s3://minioadmin:minioadmin@localhost:9000/foobar?force-path-style=true&protocol=http")
+		bs3_opts, bucket := s3_dsn.MustParseS3Bucket("s3://minioadmin:minioadmin@localhost:9000/foobar?force-path-style=true&protocol=http")
 		bclient, err := s3_client.NewS3Client(bs3_opts)
 		if err != nil {
 			t.Error(err)
@@ -85,7 +85,7 @@ func TestMinioCompatibility(t *testing.T) {
 			return
 		}
 
-		os3_opts, bucket, key := s3_dsn.MustNewS3Object("s3://minioadmin:minioadmin@localhost:9000/foobar/path/to/my/object?force-path-style=true&protocol=http")
+		os3_opts, bucket, key := s3_dsn.MustParseS3Object("s3://minioadmin:minioadmin@localhost:9000/foobar/path/to/my/object?force-path-style=true&protocol=http")
 		oclient, err := s3_client.NewS3Client(os3_opts)
 		if err != nil {
 			t.Error(err)

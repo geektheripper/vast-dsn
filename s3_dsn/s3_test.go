@@ -9,7 +9,7 @@ import (
 
 func TestS3DSNParser(t *testing.T) {
 	t.Run("amazon s3", func(t *testing.T) {
-		opts, err := s3_dsn.NewS3("s3://access_key:secret_key@-?region=us-east-2")
+		opts, err := s3_dsn.ParseS3("s3://access_key:secret_key@-?region=us-east-2")
 		if err != nil {
 			t.Error(err)
 			return
@@ -27,7 +27,7 @@ func TestS3DSNParser(t *testing.T) {
 	})
 
 	t.Run("self sign https minio", func(t *testing.T) {
-		opts, err := s3_dsn.NewS3("s3://access_key:secret_key@maggie.minio.geektr.co:9000?region=")
+		opts, err := s3_dsn.ParseS3("s3://access_key:secret_key@maggie.minio.geektr.co:9000?region=")
 		if err != nil {
 			t.Error(err)
 			return
@@ -50,7 +50,7 @@ func TestS3DSNParser(t *testing.T) {
 	})
 
 	t.Run("s3 bucket dsn", func(t *testing.T) {
-		opts, bucket, err := s3_dsn.NewS3Bucket("s3://access_key:secret_key@maggie.minio.geektr.co:9000/foobar/path/to/key?region=")
+		opts, bucket, err := s3_dsn.ParseS3Bucket("s3://access_key:secret_key@maggie.minio.geektr.co:9000/foobar/path/to/key?region=")
 		if bucket != "" || opts != nil {
 			t.Error("wrong bucket dsn parsed")
 			return
@@ -61,7 +61,7 @@ func TestS3DSNParser(t *testing.T) {
 			return
 		}
 
-		_, bucket2, _ := s3_dsn.NewS3Bucket("s3://access_key:secret_key@maggie.minio.geektr.co:9000/foobar?region=")
+		_, bucket2, _ := s3_dsn.ParseS3Bucket("s3://access_key:secret_key@maggie.minio.geektr.co:9000/foobar?region=")
 
 		if bucket2 != "foobar" {
 			t.Error("bucket not parsed")
@@ -70,7 +70,7 @@ func TestS3DSNParser(t *testing.T) {
 	})
 
 	t.Run("s3 object dsn", func(t *testing.T) {
-		_, _, key, err := s3_dsn.NewS3Object("s3://access_key:secret_key@maggie.minio.geektr.co:9000/foobar/path/to/key?region=")
+		_, _, key, err := s3_dsn.ParseS3Object("s3://access_key:secret_key@maggie.minio.geektr.co:9000/foobar/path/to/key?region=")
 		if err != nil {
 			t.Error(err)
 			return
