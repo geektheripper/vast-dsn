@@ -23,7 +23,14 @@ part of queries, access [options.go](https://github.com/redis/go-redis/blob/8fad
 ## Redis DSN Usage
 
 ```go
-import "github.com/geektheripper/vast-dsn/dsn/redis_dsn"
+import "github.com/geektheripper/vast-dsn/redis_dsn"
 
-config, err := redis_dsn.Parse("redis://localhost:6379/0/key:prefix:for:biz?client_name=biz&max_retries=10")
+opts, prefix, err := redis_dsn.Parse("redis://localhost:6379/0/key:prefix:for:biz?client_name=biz&max_retries=10")
+opts, prefix := redis_dsn.MustParse("...")
+
+opts, err := redis_dsn.ParseRedis("...")
+opts := redis_dsn.MustParseRedis("...")
+
+opts, prefix := redis_dsn.ParseRedisPrefix("...")
+opts := redis_dsn.MustParseRedisPrefix("...")
 ```
