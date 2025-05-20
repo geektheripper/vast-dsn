@@ -39,10 +39,10 @@ func TestMinioCompatibility(t *testing.T) {
 	}
 
 	for {
+		time.Sleep(1 * time.Second)
 		_, err := http.Head("http://localhost:9000")
 		if err != nil {
 			t.Logf("waiting for minio to start: %s", err)
-			time.Sleep(1 * time.Second)
 			continue
 		}
 		break
@@ -77,7 +77,7 @@ func TestMinioCompatibility(t *testing.T) {
 
 		_, err = bclient.PutObject(context.Background(), &s3.PutObjectInput{
 			Bucket: aws.String(bucket),
-			Key:    aws.String("path/to/my/object"),
+			Key:    aws.String("path:to,my/对象"),
 			Body:   strings.NewReader("test"),
 		})
 		if err != nil {
@@ -85,7 +85,7 @@ func TestMinioCompatibility(t *testing.T) {
 			return
 		}
 
-		os3_opts, bucket, key := s3_dsn.MustParseS3Object("s3://minioadmin:minioadmin@localhost:9000/foobar/path/to/my/object?force-path-style=true&protocol=http")
+		os3_opts, bucket, key := s3_dsn.MustParseS3Object("s3://minioadmin:minioadmin@localhost:9000/foobar/path:to,my/对象?force-path-style=true&protocol=http")
 		oclient, err := s3_client.NewS3Client(os3_opts)
 		if err != nil {
 			t.Error(err)
@@ -96,7 +96,7 @@ func TestMinioCompatibility(t *testing.T) {
 			return
 		}
 
-		if key != "path/to/my/object" {
+		if key != "path:to,my/对象" {
 			t.Errorf("key not parsed: %s", key)
 			return
 		}
