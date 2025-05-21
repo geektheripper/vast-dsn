@@ -1,0 +1,61 @@
+package oidc_dsn
+
+import (
+	"errors"
+	"log"
+	"net/url"
+)
+
+type OIDCConfig struct {
+	Issuer       string
+	ClientID     string
+	ClientSecret string
+}
+
+func (o *OIDCConfig) String() string {
+	result, err := url.Parse(o.Issuer)
+	if err != nil {
+		return ""
+	}
+
+	result.Scheme = "oidc"
+
+	values := url.Values{}
+	values.Set("client_id", o.ClientID)
+	values.Set("client_secret", o.ClientSecret)
+	result.RawQuery = values.Encode()
+
+	return result.String()
+}
+
+func Parse(dsnStr string) (*OIDCConfig, error) {
+	dsnUrl, err := url.Parse(dsnStr)
+	if err != nil {
+		return nil, err
+	}
+
+	if dsnUrl.Scheme != "oidc" {
+		return nil, errors.New("invalid scheme, should be oidc")
+	}
+
+	issuerUrl := url.URL{Scheme: "https", Host: dsnUrl.Host, Path: dsnUrl.Path}
+	oidcdsn := &OIDCConfig{
+		Issuer:       issuerUrl.String(),
+		ClientID:     dsnUrl.Query().Get("client_id"),
+		ClientSecret: dsnUrl.Query().Get("client_secret"),
+	}
+
+	if oidcdsn.ClientID == "" || oidcdsn.ClientSecret == "" {
+		return nil, errors.New("client_id and client_secret are required")
+	}
+
+	return oidcdsn, nil
+}
+
+func MustParse(dsn string) *OIDCConfig {
+	oidcdsn, err := Parse(dsn)
+	if err != nil {
+		log.Fatalf("failed to parse oidc dsn: %v", err)
+	}
+	return oidcdsn
+}
