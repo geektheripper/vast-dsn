@@ -1,20 +1,29 @@
 package kc_dsn_test
 
 import (
+	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/geektheripper/vast-dsn/kc_dsn"
 )
 
-var ExampleDSN = "keycloak://superuser:superpass@keycloak.vastdns.example.com:9200/realms/myrealm?client_id=myid&client_secret=mysecret"
 var ExpectURL = "https://keycloak.vastdns.example.com:9200"
 var ExpectRealm = "myrealm"
 var ExpectUsername = "superuser"
-var ExpectPassword = "superpass"
+var ExpectPassword = "super:@/#*pass"
 var ExpectClientID = "myid"
 var ExpectClientSecret = "mysecret"
 var ExpectIssuer = "https://keycloak.vastdns.example.com:9200/realms/myrealm"
+
+var ExampleDSN = fmt.Sprintf("keycloak://%s:%s@keycloak.vastdns.example.com:9200/realms/%s?client_id=%s&client_secret=%s",
+	ExpectUsername,
+	url.QueryEscape(ExpectPassword),
+	ExpectRealm,
+	ExpectClientID,
+	ExpectClientSecret,
+)
 
 func TestParseDSN(t *testing.T) {
 	t.Run("basic", func(t *testing.T) {
