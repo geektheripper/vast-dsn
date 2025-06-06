@@ -2,7 +2,7 @@ module github.com/geektheripper/vast-dsn/redis_dsn
 
 go 1.21.8
 
-require github.com/redis/go-redis/v9 v9.8.0
+require github.com/redis/go-redis/v9 v9.9.0
 
 require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect

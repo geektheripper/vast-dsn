@@ -2,7 +2,6 @@ package redis_dsn
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"net/url"
 	"regexp"
@@ -45,44 +44,6 @@ func Parse(dsn string) (opts *redis.Options, keyPrefix string, err error) {
 
 func MustParse(dsn string) (*redis.Options, string) {
 	opts, prefix, err := Parse(dsn)
-	if err != nil {
-		log.Fatalf("failed to parse redis dsn: %v", err)
-	}
-	return opts, prefix
-}
-
-func ParseRedis(dsn string) (*redis.Options, error) {
-	opts, prefix, err := Parse(dsn)
-	if err != nil {
-		return nil, err
-	}
-	if prefix != "" {
-		return nil, fmt.Errorf("invalid redis dsn: unexpected key prefix: %s", prefix)
-	}
-	return opts, nil
-}
-
-func MustParseRedis(dsn string) *redis.Options {
-	opts, err := ParseRedis(dsn)
-	if err != nil {
-		log.Fatalf("failed to parse redis dsn: %v", err)
-	}
-	return opts
-}
-
-func ParseRedisPrefix(dsn string) (opts *redis.Options, prefix string, err error) {
-	opts, prefix, err = Parse(dsn)
-	if err != nil {
-		return nil, "", err
-	}
-	if prefix != "" {
-		return nil, "", fmt.Errorf("invalid redis dsn: unexpected key prefix: %s", prefix)
-	}
-	return opts, prefix, nil
-}
-
-func MustParseRedisPrefix(dsn string) (*redis.Options, string) {
-	opts, prefix, err := ParseRedisPrefix(dsn)
 	if err != nil {
 		log.Fatalf("failed to parse redis dsn: %v", err)
 	}
