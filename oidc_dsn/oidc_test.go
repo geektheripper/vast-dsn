@@ -1,16 +1,18 @@
 package oidc_dsn_test
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/geektheripper/vast-dsn/oidc_dsn"
 )
 
-var ExampleDSN = "oidc://keycloak.vastdns.example.com:9200/realms/myrealm?client_id=myid&client_secret=mysecret"
+var ExampleDSN = "oidc://keycloak.vastdns.example.com:9200/realms/myrealm?client_id=myid&client_secret=mysecret&scopes=openid,profile,email"
 var ExpectIssuer = "https://keycloak.vastdns.example.com:9200/realms/myrealm"
 var ExpectClientID = "myid"
 var ExpectClientSecret = "mysecret"
+var ExpectScopes = []string{"openid", "profile", "email"}
 
 func TestParseDSN(t *testing.T) {
 	t.Run("basic", func(t *testing.T) {
@@ -29,6 +31,11 @@ func TestParseDSN(t *testing.T) {
 			t.Error("issuer url not parsed")
 			return
 		}
+
+		if !reflect.DeepEqual(oidcCfg.Scopes, ExpectScopes) {
+			t.Error("scopes not parsed")
+			return
+		}
 	})
 
 	t.Run("invalid dsn", func(t *testing.T) {
@@ -40,7 +47,7 @@ func TestParseDSN(t *testing.T) {
 	})
 
 	t.Run("to string", func(t *testing.T) {
-		if oidc_dsn.MustParse(ExampleDSN).String() != ExampleDSN {
+		if oidc_dsn.MustParse(ExampleDSN).String() != strings.ReplaceAll(ExampleDSN, ",", "%2C") {
 			t.Error("string not parsed")
 			return
 		}
