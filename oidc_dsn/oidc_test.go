@@ -1,6 +1,8 @@
 package oidc_dsn_test
 
 import (
+	"fmt"
+	"net/url"
 	"reflect"
 	"strings"
 	"testing"
@@ -8,13 +10,21 @@ import (
 	"github.com/geektheripper/vast-dsn/oidc_dsn"
 )
 
-var ExampleDSN = "oidc://keycloak.vastdns.example.com:9200/realms/myrealm?client_id=myid&client_secret=mysecret&scopes=openid,profile,email"
 var ExpectIssuer = "https://keycloak.vastdns.example.com:9200/realms/myrealm"
 var ExpectClientID = "myid"
 var ExpectClientSecret = "mysecret"
 var ExpectScopes = []string{"openid", "profile", "email"}
+var ExpectEndpoint = "http://1.2.3.4:9876"
+
+var ExampleDSN = fmt.Sprintf("oidc://keycloak.vastdns.example.com:9200/realms/myrealm?client_id=%s&client_secret=%s&scopes=%s&endpoint=%s",
+	ExpectClientID,
+	ExpectClientSecret,
+	strings.Join(ExpectScopes, ","),
+	url.QueryEscape(ExpectEndpoint),
+)
 
 func TestParseDSN(t *testing.T) {
+	ExampleDSN = oidc_dsn.MustParse(ExampleDSN).String()
 	t.Run("basic", func(t *testing.T) {
 		oidcCfg, err := oidc_dsn.Parse(ExampleDSN)
 		if err != nil {
@@ -34,6 +44,11 @@ func TestParseDSN(t *testing.T) {
 
 		if !reflect.DeepEqual(oidcCfg.Scopes, ExpectScopes) {
 			t.Error("scopes not parsed")
+			return
+		}
+
+		if oidcCfg.Endpoint.String() != ExpectEndpoint {
+			t.Error("endpoint not parsed")
 			return
 		}
 	})

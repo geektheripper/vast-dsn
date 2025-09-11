@@ -2,7 +2,7 @@
 
 ## DSN Pattern
 
-`oidc://<issuer_url>?client_id=<client_id>&client_secret=<client_secret>&scopes=<scope,scope,...>`
+`oidc://<issuer_url>?client_id=<client_id>&client_secret=<client_secret>&scopes=<scope,scope,...>&endpoint=<endpoint>`
 
 ## Package Usage
 
@@ -15,6 +15,7 @@ oidc.Issuer // string
 oidc.ClientID // string
 oidc.ClientSecret // string
 oidc.Scopes // []string
+oidc.Endpoint // url.URL
 
 // panic if error
 oidc := oidc_dsn.MustParse("oidc://keycloak.vastdns.example.com:9200/realms/myrealm?client_id=myid&client_secret=mysecret&scopes=openid,profile,email")
