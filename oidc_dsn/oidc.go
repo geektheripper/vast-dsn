@@ -12,7 +12,7 @@ type OIDCConfig struct {
 	ClientID     string
 	ClientSecret string
 	Scopes       []string
-	Endpoint     *url.URL
+	HttpEndpoint *url.URL
 }
 
 func (o *OIDCConfig) String() string {
@@ -27,7 +27,7 @@ func (o *OIDCConfig) String() string {
 	values.Set("client_id", o.ClientID)
 	values.Set("client_secret", o.ClientSecret)
 	values.Set("scopes", strings.Join(o.Scopes, ","))
-	values.Set("endpoint", o.Endpoint.String())
+	values.Set("http_endpoint", o.HttpEndpoint.String())
 	result.RawQuery = values.Encode()
 
 	return result.String()
@@ -51,11 +51,11 @@ func Parse(dsnStr string) (*OIDCConfig, error) {
 		Scopes:       strings.Split(dsnUrl.Query().Get("scopes"), ","),
 	}
 
-	endpoint := dsnUrl.Query().Get("endpoint")
-	if endpoint != "" {
-		oidcdsn.Endpoint, err = url.Parse(endpoint)
+	http_endpoint := dsnUrl.Query().Get("http_endpoint")
+	if http_endpoint != "" {
+		oidcdsn.HttpEndpoint, err = url.Parse(http_endpoint)
 		if err != nil {
-			return nil, errors.New("invalid endpoint, failed to parse")
+			return nil, errors.New("invalid http_endpoint, failed to parse")
 		}
 	}
 

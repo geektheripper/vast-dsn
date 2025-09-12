@@ -14,13 +14,13 @@ var ExpectIssuer = "https://keycloak.vastdns.example.com:9200/realms/myrealm"
 var ExpectClientID = "myid"
 var ExpectClientSecret = "mysecret"
 var ExpectScopes = []string{"openid", "profile", "email"}
-var ExpectEndpoint = "http://1.2.3.4:9876"
+var ExpectHttpEndpoint = "http://1.2.3.4:9876"
 
-var ExampleDSN = fmt.Sprintf("oidc://keycloak.vastdns.example.com:9200/realms/myrealm?client_id=%s&client_secret=%s&scopes=%s&endpoint=%s",
+var ExampleDSN = fmt.Sprintf("oidc://keycloak.vastdns.example.com:9200/realms/myrealm?client_id=%s&client_secret=%s&scopes=%s&http_endpoint=%s",
 	ExpectClientID,
 	ExpectClientSecret,
 	strings.Join(ExpectScopes, ","),
-	url.QueryEscape(ExpectEndpoint),
+	url.QueryEscape(ExpectHttpEndpoint),
 )
 
 func TestParseDSN(t *testing.T) {
@@ -47,8 +47,8 @@ func TestParseDSN(t *testing.T) {
 			return
 		}
 
-		if oidcCfg.Endpoint.String() != ExpectEndpoint {
-			t.Error("endpoint not parsed")
+		if oidcCfg.HttpEndpoint.String() != ExpectHttpEndpoint {
+			t.Error("http_endpoint not parsed")
 			return
 		}
 	})
