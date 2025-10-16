@@ -15,6 +15,11 @@ func TestS3DSNParser(t *testing.T) {
 			return
 		}
 
+		if opts.Host != "" {
+			t.Error("host should be empty")
+			return
+		}
+
 		if opts.Region != "us-east-2" {
 			t.Error("region not parsed")
 			return
@@ -78,6 +83,40 @@ func TestS3DSNParser(t *testing.T) {
 
 		if key != "path/to/key" {
 			t.Error("key not parsed")
+			return
+		}
+	})
+
+	t.Run("s3 options string", func(t *testing.T) {
+		opts1 := &s3_dsn.S3Options{
+			Protocol:     "http",
+			Region:       "us-east-1",
+			NoVerifySSL:  true,
+			UsePathStyle: true,
+			Host:         "example.com",
+		}
+
+		opts2 := s3_dsn.MustParseS3(opts1.String())
+
+		if *opts1 != *opts2 {
+			t.Error("options not parsed")
+			return
+		}
+
+		opts1.AccessKeyID = "new_access_key"
+		opts1.SecretAccessKey = "new_secret_key"
+
+		opts3 := s3_dsn.MustParseS3(opts1.String())
+
+		if *opts1 != *opts3 {
+			t.Error("options not parsed")
+			return
+		}
+
+		opts4 := s3_dsn.MustParseS3("s3://new_access_key:new_secret_key@-?region=us-east-1")
+		opts5 := s3_dsn.MustParseS3(opts4.String())
+		if *opts4 != *opts5 {
+			t.Error("options not parsed")
 			return
 		}
 	})

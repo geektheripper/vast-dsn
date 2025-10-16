@@ -19,6 +19,37 @@ type S3Options struct {
 	UsePathStyle    bool
 }
 
+func (opts *S3Options) String() string {
+	result := url.URL{
+		Scheme: "s3",
+		Host:   opts.Host,
+	}
+	if result.Host == "" {
+		result.Host = "-"
+	}
+
+	if opts.AccessKeyID != "" {
+		result.User = url.UserPassword(opts.AccessKeyID, opts.SecretAccessKey)
+	}
+	query := url.Values{}
+	if opts.Region != "" {
+		query.Set("region", opts.Region)
+	}
+	if opts.NoVerifySSL {
+		query.Set("no-verify-ssl", "true")
+	}
+	if opts.UsePathStyle {
+		query.Set("use-path-style", "true")
+	}
+	if opts.Protocol == "http" {
+		query.Set("protocol", "http")
+	}
+	if len(query) > 0 {
+		result.RawQuery = query.Encode()
+	}
+	return result.String()
+}
+
 func Parse(dsn string) (opts *S3Options, bucket string, key string, err error) {
 	opts = &S3Options{
 		Protocol: "https",
@@ -77,6 +108,9 @@ func Parse(dsn string) (opts *S3Options, bucket string, key string, err error) {
 	}
 
 	opts.Host = url.Host
+	if opts.Host == "-" {
+		opts.Host = ""
+	}
 
 	return
 }
